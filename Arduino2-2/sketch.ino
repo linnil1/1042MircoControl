@@ -5,35 +5,31 @@ int digit[10]= { A+B+C+D+E+F , B+C , A+B+G+E+D , A+B+G+C+D , F+G+B+C,
 	A+F+G+C+D , A+F+E+D+C+G , A+B+C , A+B+C+D+E+F+G , A+B+C+D+F+G};
 
 const int base[2]={2,13};
-#define UL unsigned long 
+const int nowtn=2;
+#define LL long long 
 
-void output(UL a,int b)
+void output(LL a,int b)
 {
-//	Serial.print(a);
-//	Serial.print(":");
 	a = digit[a];
 	for(int i=0;i<7;++i,a>>=1)
-	{
 		digitalWrite(base[b]+i,!(a&1));
-//		Serial.print(a&1);
-	}
-//	Serial.println("");
 }
 
-void timetick(UL dtime)
+void timetick(LL dtime)
 {
-	UL now=0;
+	LL now=0;
 	if(dtime==60000)
 		now = 60;
 	else if(dtime>0)
 		now =  (dtime/1000)%60 ;
-	output(now/10,1);
-	output(now%10,0);
+	
+	for(int i=0;i<nowtn;++i,now/=10)
+		output(now%10,i);
 }
 
-const int nowtn=2;
 int stopmode=2,mode=0;
-UL stopt=0,stopadd=0;
+LL stopt=0,stopadd=0;
+
 void setup() {
 	
 	Serial.begin(9600);
@@ -55,12 +51,11 @@ void setup() {
 // 0 clock , 1 stopwatch cont, 2 stay
 void getmode()
 {
-	if( digitalRead(9) )//mode change 
+	if( digitalRead(9) )	//mode change 
 	{
-//		Serial.print(9);
-		if(mode==0)
+		if(mode==0)			//change to clock mode
 			mode=stopmode;
-		else
+		else 				//change to stopwatch mode
 		{
 			stopmode = mode ;
 			mode =0 ;
@@ -70,27 +65,27 @@ void getmode()
 	}
 	else if( digitalRead(10) )//cont  stop
 	{
-//		Serial.print(10);
 		if(mode == 0 )
 			return ;
 		
 		else if( mode == 1)
 		{
 			mode = 2;
-			stopadd+= millis()-stopt;
+			stopadd+= (LL)millis()-stopt;
+			while( digitalRead(10) )
+				delay(1);
 		}
 		else if( mode == 2)
 		{
-			stopt = millis();
+			while( digitalRead(10) )
+				delay(1);
+			stopt = (LL)millis();
 			mode = 1;
 		}
 
-		while( digitalRead(10) )
-			delay(1);
 	}
 	else if( digitalRead(11) )//reset
 	{
-//		Serial.print(11);
 		if(mode==0)
 			return ;
 		stopt=stopadd=0;
@@ -108,9 +103,15 @@ void loop()
 	switch(mode)// 0 clock , 1 stopwatch cont, 2 stay
 	{
 		case 0:
-			timetick(millis());break;
+			timetick((LL)millis());break;
 		case 1:
-			timetick(60000-(stopadd+millis()-stopt));break;
+			timetick(60000-(stopadd+(LL)millis()-stopt));
+			if(stopadd+(LL)millis()-stopt>=60000)
+			{
+				stopadd = 60000;
+				mode=2;
+			}
+			break;
 		case 2:
 			timetick(60000-stopadd);break;
 	}
