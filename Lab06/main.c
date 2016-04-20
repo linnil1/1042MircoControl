@@ -22,7 +22,7 @@ void init()
 	PORTC=0;// initial sound 0
 
 	DDRB=0xFF; // output
-	PORTB =~digit[8];
+	PORTB =~digit[7];
 
 	DDRD=0x00; // input
 	PORTD=0xFF;
@@ -61,7 +61,7 @@ int main(void)
 			TCCR0B=0x00;// stop Timer0
 			TIFR0|=(1<<OCF0A);// clear TOV0
 		}
-		PORTB =~digit[8];
+		PORTB =~digit[7];
 
 	}
 }
