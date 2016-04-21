@@ -1,10 +1,13 @@
-debug:
-	avr-g++ -g -Wall -Os -mcall-prologues -fno-exceptions -mmcu=atmega328p main.c
-	rm a.out
+MONITOR_PORT = /dev/ttyACM0
+USER_LIB_PATH = ~/c/arduino/STDCPP
 
-upload:
-	avr-g++ -Os -mcall-prologues -fno-exceptions -mmcu=atmega328p -o main.obj main.c
-	avr-objcopy -R .eeprom -O ihex main.obj main.hex
-	avrdude -c stk500v1 -P /dev/ttyACM0 -b 19200 -p m328p  -U flash:w:main.hex
-	rm main.obj
-	rm main.hex
+BOARD_TAG    = uno
+
+MCU = atmega328p
+AVRDUDE_ARD_BAUDRATE = 19200
+AVRDUDE_ARD_PROGRAMMER = stk500v1
+#HEX_MAXIMUM_SIZE = 32768
+AVRDUDE_OPTS = -v
+
+include ~/c/arduino/Arduino-Makefile/Arduino.mk
+
