@@ -1,0 +1,9 @@
+Quiz
+• Connect the Arduino to a computer
+• Blink the LED at
+	• 2Hz when the key ‘a’
+	• 1/2Hz when the key ‘b’
+	• 1/8Hz when the key ‘c’
+	of the computer keyboard is pressed
+• Turn of the LED if the key ‘d’ of the computer keyboard is pressed
+

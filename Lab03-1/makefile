@@ -1,4 +1,4 @@
 MONITOR_PORT = /dev/ttyACM0
-#ARDUINO_LIBS = StandardCplusplus
+#ARDUINO_LIBS = ../../STDCPP
 BOARD_TAG    = uno
-include ~/c/arduino/Arduino-Makefile/Arduino.mk
+include ../../Arduino-Makefile/Arduino.mk

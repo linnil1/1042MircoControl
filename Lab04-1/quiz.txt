@@ -1,0 +1,6 @@
+Quiz
+• Build a circuit that composes of an LED
+• The LED is connected to a PWM pin
+• Increase the brightness of the LED when the key ‘+’ of the computer keyboard is pressed
+• Decrease the brightness of the LED when the key ‘-’ of the computer keyboard is pressed
+

@@ -1,0 +1,6 @@
+Quiz
+• Build a circuit that composes of an LED and a button
+• Blink the LED at
+	• 2Hz when the button is pressed
+	• 1/2 Hz when the button is released
+

@@ -1,5 +1,5 @@
 MONITOR_PORT = /dev/ttyACM0
-USER_LIB_PATH = ~/c/arduino/STDCPP
+#USER_LIB_PATH = ../../STDCPP
 
 BOARD_TAG    = uno
 
@@ -9,5 +9,5 @@ AVRDUDE_ARD_PROGRAMMER = stk500v1
 #HEX_MAXIMUM_SIZE = 32768
 AVRDUDE_OPTS = -v
 
-include ~/c/arduino/Arduino-Makefile/Arduino.mk
+include ../../Arduino-Makefile/Arduino.mk
 
