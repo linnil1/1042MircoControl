@@ -39,6 +39,7 @@ int getdig()
 
 void time0_normal(uint k)
 { // 203 273 304 343 360 415 465 526
+	k  = sethz( k , 64);
 	TCCR0A=0x00;
 	while((~PIND)&0xFF){
 		TCNT0=256L-k;
@@ -52,6 +53,7 @@ void time0_normal(uint k)
 
 void time0_CTC(uint k)
 { // 198 264 294 330 344 395 440 495
+	k  = sethz( k , 64);
 	TCCR0A=0x02;
 	OCR0A=k;
 	while((~PIND)&0xFF){
@@ -65,6 +67,7 @@ void time0_CTC(uint k)
 
 void time2_normal(uint k)
 { //203	268	298	336	359	404	450	507
+	k  = sethz( k , 32);
 	TCCR2A=0x00;
 	while((~PIND)&0xFF){
 		TCNT2=256L-k;
@@ -78,6 +81,7 @@ void time2_normal(uint k)
 
 void time2_CTC(uint k)
 { // 200	263	293	328	352	395	438	495
+	k  = sethz( k , 32);
 	TCCR2A=0x02;
 	OCR2A=k;
 	while((~PIND)&0xFF){
@@ -91,6 +95,7 @@ void time2_CTC(uint k)
 
 void time1_CTC(uint k)
 { //198	264	293	330	343	393	438	492
+	k  = sethz( k , 64);
 	TCCR1A=0;
 	TCCR1B=(1<<WGM12);
 	OCR1AH=k>>8;
@@ -106,6 +111,7 @@ void time1_CTC(uint k)
 
 void time1_normal(uint k)
 { //202 271	303	343	358	414	463	523
+	k  = sethz( k , 64);
 	uint uk = 65536u - k ;
 	TCCR1A=0;
 	TCCR1B=0;
@@ -128,12 +134,12 @@ int main(void)
 		if(k==-1)
 			continue;
 
-//		time0_normal(sethz(fre[k],64));
-//		time0_CTC(sethz(fre[k]),64);
-//		time2_normal(sethz(fre[k],32));
-//		time2_CTC(sethz(fre[k],32));
-//		time1_CTC(sethz(1,64));
-//		time1_normal(sethz(fre[k],64));
+//		time0_normal(fre[k]);
+//		time0_CTC(fre[k]);
+//		time2_normal(fre[k]);
+//		time2_CTC(fre[k]);
+//		time1_CTC(fre[k]);
+//		time1_normal(fre[k]);
 		
 	}
 }

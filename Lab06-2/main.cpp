@@ -1,7 +1,7 @@
 //#define F_CPU 1000000UL
 
 enum {G=0x40,F=0x20,E=0x10,D=0x08,C=0x04,B=0x02,A=0x01};
-int digit[8]= { A+F+E+D,B+C+G+E+D,A+F+G+E+D,A+F+G+E,A+F+C+D+E,A+B+C+E+F+G,F+G+E+C+D,0xFF};
+int digit[7]= { A+F+E+D,B+C+G+E+D,A+F+G+E+D,A+F+G+E,A+F+C+D+E,A+B+C+E+F+G,F+G+E+C+D};
 
 #include <avr/io.h>
 #include <math.h>
@@ -28,20 +28,22 @@ void init()
 
 double fre[7]={261.63,293.66,329.63,349.23,392,440,493.88};
 
-void time1_CTC(uint k,long del,usint out)//del is ms
+void time1_CTC(uint f,long del,usint out)//hz ms sound
 { //198	264	293	330	343	393	438	492
+	uint k = sethz(f,1);
 	TCCR1A=0;
 	TCCR1B=(1<<WGM12);
 	OCR1AH=k>>8;
 	OCR1AL=k&0xFF;
 
-	long tick= (long)k*2000/del; 
+	long tick= (long)f*del*2/1000; 
 	
+	PORTC=0;
 	while( tick--  )
 	{
-		TCCR1B^=0b00000011;//64
+		TCCR1B^=0b00000001;//1
 		while((TIFR1&(1<<OCF1A))==0);
-		TCCR1B^=0b00000011;
+		TCCR1B^=0b00000001;
 		TIFR1=(1<<OCF1A);
 		PORTC ^= out;
 	}
@@ -50,10 +52,9 @@ void time1_CTC(uint k,long del,usint out)//del is ms
 void playsound(int feq,int t)
 {
 	PORTB = ~digit[feq];
-	time1_CTC( sethz(fre[feq],64),100,1);
-	PORTC=0;
+	time1_CTC( fre[feq],100,1);
 	PORTB = ~0;
-	time1_CTC( sethz(fre[feq],64),t*500,0);
+	time1_CTC( fre[feq],t*500,0);// BMP = 120
 }
 
 int twinkle[6*7]={
