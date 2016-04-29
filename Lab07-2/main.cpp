@@ -22,12 +22,24 @@ void initserial()
     UCSR0B|=(1<<TXEN0);			// enable transmit
 }
 
-void printserial(char *str)
+char print_str_array[100],
+	 *print_str=print_str_array;
+
+void printserial_step()
 {
-	while(*str)
+	if (*print_str && (UCSR0A & (1<<UDRE0)))
+	{
+        UDR0 = *(print_str++);
+	}
+}
+
+
+void printserial()
+{
+	while(*print_str)
 	{
         while(!(UCSR0A & (1<<UDRE0)));
-        UDR0 = *(str++);
+        UDR0 = *(print_str++);
 	}
 }
 
@@ -35,7 +47,7 @@ int all=0,allavg=0;
 void print_vol_to_dis(int ori,int* num,int dot=0)
 {
 	// array to number 
-	char str[100];
+	char *str = print_str = print_str_array ;
 	sprintf(str,"%d -> ",ori);
 	int len = strlen(str);
 	for(int i=0;i<=dot;++i)
@@ -47,9 +59,11 @@ void print_vol_to_dis(int ori,int* num,int dot=0)
 	str[len++] = '\n' ;
 	str[len  ] = '\0' ;
 	
+	printserial_step();
 //	printserial(str);
 	
-	// additional
+	// additional for cal average
+/*
 	allavg += ori;
 	if(all++==31)
 	{
@@ -57,6 +71,7 @@ void print_vol_to_dis(int ori,int* num,int dot=0)
 		allavg=all=0;
 		printserial(str);
 	}
+*/
 
 }
 
@@ -158,10 +173,16 @@ int main(void)
 		}
 
 		showarray(dis_arr,dis_dot); // 1 ms
+		print_vol_to_dis((int)d,dis_arr,dis_dot);
 		for(int i=1000,j=0;i>0;++j,i/=10)
 			dis_arr[j] = num / i % 10;
 
-		showarray(dis_arr,dis_dot,25); // 100 ms
+		for(int i=0;i<25;++i)
+		{
+			showarray(dis_arr,dis_dot); // 100 ms
+			printserial_step();
+		}
+		printserial();
 
 	}
 	return 1;
