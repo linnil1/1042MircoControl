@@ -1,4 +1,5 @@
-# La10 homework
+# Lab10 homework
+
 1. Use the Atmel Studio debugging functions to find the machine codes for the program in Fig. 9. Make a copy of the machine codes to your report.
 
 see [lssfile](asm.lss)
@@ -39,12 +40,18 @@ see [lssfile](asm.lss)
 
 | COUNTER   | 0X300 | R20   |
 | --        | --    | --    |
-| 12		| 0		| 0x01	|
-| 18		| 1		| 0x02	|
-| 24		| 2		| 0x03	|
-| 30		| 3		| 0x04	|
+| 12		| 0		| 0X01	|
+| 18		| 1		| 0X02	|
+| 24		| 2		| 0X03	|
+| 30		| 3		| 0X04	|
 
 ......
+
+If you want to store at 0x150
+just modify your file 
+` .EQU SUM = 0x300 `
+to
+` .EQU SUM = 0x150 `
 
 
 
