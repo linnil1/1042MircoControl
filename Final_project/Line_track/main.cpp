@@ -101,8 +101,8 @@ unsigned int getvol(int pin,int time=1)// time need to be smaller than 64
 }
 
 void time1_CTC()
-{
-	int k = 1000; // 1MHz
+{ //198	264	293	330	343	393	438	492
+	int k = 1000;
 	TCCR1A=0;
 	TCCR1B=(1<<WGM12);
 	OCR1AH=k>>8;
@@ -122,7 +122,9 @@ void my_delay(long t)//ms
 
 void initserial()
 {
-    unsigned int BaudR = 4800;
+	CLKPR=(1<<CLKPCE);
+	CLKPR=0b00000000;//  to 8 Mhz
+    unsigned int BaudR = 9600;
     unsigned int UbrrV = (F_CPU / (BaudR*16UL))-1;
     UBRR0H=(unsigned char)(UbrrV>>8);	// set Baud rate
     UBRR0L=(unsigned)UbrrV;
@@ -130,10 +132,10 @@ void initserial()
     UCSR0B|=(1<<TXEN0);			// enable transmit
 }
 
-void printserial(int num)
+void printserial(int *num)
 {
 	char str[100],*print_str=str; 
-	sprintf(str,"%d\r\n",num);
+	sprintf(str,"%d %d %d\r\n",num[0],num[1],num[2]);
 	while(*print_str)
 	{
         while(!(UCSR0A & (1<<UDRE0)));
@@ -141,139 +143,120 @@ void printserial(int num)
 	}
 }
 
-void test(int num,int m)
+void toLevel(int *num)
 {
-	char str[100],*print_str=str; 
-	sprintf(str,"--%d %d\r\n",num,m);
-	while(*print_str)
+	for(int i=0;i<3;++i)
+		num[i] = getvol(i,30);
+	num[0]-=100;
+	num[2]-=250;
+//	printserial(num);
+	for(int i=0;i<3;++i)
 	{
-        while(!(UCSR0A & (1<<UDRE0)));
-        UDR0 = *(print_str++);
+		/*
+		if(num[i]<400)
+			num[i]=400;
+		else if(num[i]>800)
+			num[i]=800;
+		num[i]=(num[i]-400)/50;
+		*/
+		if(num[i]<600)
+			num[i]=0;
+		else if(num[i]>750)
+			num[i]=2;
+		else 
+			num[i]=1;
 	}
 }
 
-unsigned int readDis()
+int turndig = 1,allturn=0;
+char turndir;
+void LRturn(char c,int big=1)
 {
-	unsigned int sum=0;
-	for(int i=0;i<50;++i)
-		sum += getvol(3,50);
-	return sum/50;
-}
-
-
-void bigturn(char c)
-{
-	set_motor(0,0);
-	send_to_motor();
-	my_delay(200);
 	switch(c)
 	{
-		case 'a':
-			set_motor(-160,160);
+		case 'a': 
+			if( turndir == 'd' )
+				big*=2;
+			change_motor(0, turndig*big);
+			turndir = c;
 			break;
-		case 'd':
-			set_motor(160,-160);
+		case 'd': 
+			change_motor( turndig*big,0);
+			if( turndir == 'a' )
+				big*=2;
+			turndir = c;
+			break;
+		case 'w': 
+			change_motor( turndig*big, turndig*big);
+			break;
+		case 's': 
+			change_motor( -turndig*big, -turndig*big);
 			break;
 	}
-	send_to_motor();
-	my_delay(200);
 }
-
-void findnearest()
-{
-	//left
-	int pre = readDis();
-	int dir=1,time=0;
-	while(1)
-	{
-		set_motor(60*dir,-60*dir);//turn right
-		send_to_motor();
-		my_delay(10);
-		int num = readDis();
-		test(pre,num);
-		if(pre - num < 1)// resolution
-		{
-			dir *= -1;
-			if( ++time > 2)
-				break;
-		}
-		pre = num ;
-	}
-	set_motor(0,0);
-	send_to_motor();
-/*
-	set_motor(-80,80);
-	send_to_motor();
-	my_delay(50);
-	set_motor(0,0);
-	send_to_motor();
-	my_delay(1000);
-*/
-}
-
-void findwall()
-{
-	set_motor(0,0);
-	send_to_motor();
-	int now = readDis();
-	
-if(now <600)
-{
-	// for far away
-	set_motor(250,250);
-	while(now < 400)
-	{
-		send_to_motor();
-		now = readDis();
-	}
-
-	// close it
-	set_motor(150,150);
-	while(now < 600)
-	{
-		send_to_motor();
-		now = readDis();
-	}
-}
-else
-{
-	// too close
-	set_motor(-70,-70);
-	while(now > 650)
-	{
-		send_to_motor();
-		now = readDis();
-	}
-}
-
-	set_motor(0,0);
-	send_to_motor();
-
-}
-
 
 
 int main()
 {
 	init_motor();
-	initserial();
+//	initserial();
+	my_delay(500);
+	DDRB  |= 1;
+	PORTB |= 1;
+	my_delay(500);
+	PORTB ^= 1;
 
-	/*  test distance 
+	set_motor(120,120);
+	send_to_motor();
+	unsigned long long int t = 0;
+	int num[3];
 	while(1)
 	{
-		int now = readDis();
-		printserial(now);
-		my_delay(100);
-	}
-	*/
+		++t;
+		toLevel(num);
+		if( num[0] && num[2])
+		{
+		}
+		else if( num[1]==2)
+		{
+			if( num[0])
+				LRturn('a',1);
+			else if( num[2])
+				LRturn('d',1);
+			else
+			{
+/*				if(turndir == 'a')
+					LRturn('d',1);
+				else if(turndir == 'd')
+					LRturn('a',1);
+*/
+				LRturn('w');
+//				slow_motor(15);
+			}
+		}
+		else if( num[1]==1)
+		{
+			if( num[0])
+				LRturn('a',2);
+			else if( num[2])
+				LRturn('d',2);
+		}
+		else
+		{ 
+			if( num[0] )
+				LRturn('a',3);
+			else if( num[2] )
+				LRturn('d',3);
+			else
+				set_motor(0,0);
+			if( mot[0]+mot[1] > 200)
+				mult_motor(0.8);
+		}
 
-//	set_motor(120,120);
-	my_delay(2000);
-//	findnearest();
-
-	while(1)
-	{
-		findwall();
+//		printserial(num);
+		send_to_motor();
+		my_delay(1);
+		PORTB = 0;
 	}
 
 	return 0;
