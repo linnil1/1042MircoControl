@@ -53,20 +53,10 @@ void set_motor(int l,int r)
 	lim_max(mot[1]);
 }
 
-void mult_motor(double mult)
+void stop()
 {
-	mot[0] *= mult;
-	mot[1] *= mult;
-}
-
-void slow_motor(int want)
-{
-	if ( abs( mot[0] - mot[1] ) < want*2)
-		mot[0]=mot[1]= (mot[0]+mot[1])/2;
-	else if( mot[0] > mot[1] )
-		mot[0]-=want,mot[1]+=want;
-	else 
-		mot[1]-=want,mot[0]+=want;
+	mot[0]=mot[1]=0;
+	send_to_motor();
 }
 
 void init_motor()
@@ -178,49 +168,57 @@ void bigturn(char c,int deg=2)
 	send_to_motor();
 	my_delay(130*deg);
 
-	set_motor(0,0);
-	send_to_motor();
+	stop();
 }
 
 /* NOTE
  * We can't use max because the car will move
  * We can't use pre - num < 1 beacause the data is not very correct
  */
+
+void blink()
+{
+		for(int j=0;j<10;++j)
+		{
+			PORTB = 2;
+			my_delay(100);
+			PORTB = 0;
+			my_delay(100);
+		}
+}
+
+
 void findnearest()
 {
 	//left
 	int dir=1;
 	
-	for(int i=0;i<=1;++i)
+	int max = readDis();
+	while(1)
 	{
-		int max = readDis(),num=max,k=0;
-		while(1)
+		PORTB = 0;
+		set_motor(65*dir,-65*dir);
+		send_to_motor();
+		my_delay(300);
+		stop();
+		int num = readDis();
+		if(num > max )
+			max = num;//400 is normal
+		else if (max>600 && num < max-5 )// 10 is range
 		{
-			set_motor(60*dir,-60*dir);
-			send_to_motor();
-			if(i&1)
-			{
-				my_delay(100);
-				set_motor(0,0);
-				send_to_motor();
-			}
-			int num = readDis();
-			test(max,num);
-			if(num > max)
-				max = num;//400 is normal
-			else if (num>500 && num < max-5 && k++ >1)// 10 is range
-			{
-				dir *= -1;
-				max = num;
-				set_motor(0,0);
-				send_to_motor();
-				break;
-			}
+			PORTB = 2;
+//			if(readDis()>=max-5)//double check
+//				continue;
+			dir *= -1;
+			max = num;
+			break;
 		}
 	}
-
-	set_motor(0,0);
+	set_motor(60*dir,-60*dir);
 	send_to_motor();
+	my_delay(300);
+
+	stop();
 /*
 	set_motor(-80,80);
 	send_to_motor();
@@ -237,7 +235,7 @@ void findwall()
 	send_to_motor();
 	int now = readDis();
 	
-	if(now <600)
+	if(now <700)
 	{
 		// for far away
 		set_motor(250,250);
@@ -249,37 +247,35 @@ void findwall()
 
 		// close it
 		set_motor(150,150);
-		while(now < 600)
+		while(now < 700)
 		{
 			send_to_motor();
 			now = getvol(3,50); 
 		}
 	}
-	else
+	else if(now>800)
 	{
 		// too close
 		set_motor(-70,-70);
-		while(now > 750)// back , need to be high
+		while(now > 800)// back , need to be high idon'tkonw
 		{
 			send_to_motor();
 			now = getvol(3,50); 
 		}
 	}
 
-	set_motor(0,0);
-	send_to_motor();
-
+	stop();
 }
 
-bool go()// true -> wall
+bool go_some()// true -> wall
 {
-	if ( getvol(3,50) > 600) return true;
+	if ( getvol(3,50) > 700) return true;
 	set_motor(250,250);
 	send_to_motor();
-	for(int i=0;i<100;++i)//1000
+	for(int i=0;i<30;++i)//1000
 	{
 		my_delay(10);
-		if ( getvol(3,50) > 600) return true;
+		if ( getvol(3,50) > 700) return true;
 	}
 	//slow down
 	for(int i=250;i>=0;i-=50)//300
@@ -288,11 +284,17 @@ bool go()// true -> wall
 		send_to_motor();
 		for(int j=0;j<5;++j)
 		{
-			if ( getvol(3,50) > 600) return true;
+			if ( getvol(3,50) > 700) return true;
 			my_delay(10);
 		}
 	}
 	return false;
+}
+bool go()
+{
+	bool tmp = go_some();
+	stop();
+	return tmp;
 }
 
 
@@ -301,57 +303,70 @@ int main()
 	init_motor();
 	initserial();
 	DDRB |= 2;
+	my_delay(2000);
 
 	//distance
 	/*
-	while(1)
+	
+	   while(1)
 	{
 		int now = readDis();
 		printserial(now);
 		my_delay(100);
 	}
 
-	my_delay(2000);
 	while(1)
 	{
-		findnearest();
-		my_delay(100);
+//		findnearest();
+		findwall();
+		my_delay(2000);
 	}
 	*/
 
+
+//	along the border
+/*
+	while(1)
+	{
+		go();
+		set_motor(0,0);send_to_motor();
+//		my_delay(1000);
+		bigturn('d');
+//		my_delay(1000);
+		findwall();
+//		my_delay(1000);
+		bigturn('a');
+//		my_delay(1000);
+		findnearest();
+//		my_delay(1000);
+		bigturn('a');
+//		my_delay(1000);
+	}
+*/
+	
 	int isWall=0,noright=0;
 	while(1)
 	{
 		isWall = go();
-		set_motor(0,0);send_to_motor();
-		my_delay(1000);
-		bigturn('d');
-		my_delay(1000);
-		findwall();
-		my_delay(1000);
-		bigturn('a');
-		my_delay(1000);
-		findnearest();
-		my_delay(1000);
-		bigturn('a');
-		my_delay(1000);
-	}
-	/*
-	while(1)
-	{
-		// touch wall
-		if(!noright)//no thing on right
-			isWall = go();
-		set_motor(0,0);send_to_motor();
 		my_delay(1000);
 //		printserial(isWall);
 		bigturn('d');
 		my_delay(1000);
 		if( go() )
+		{
 			findwall();
+			noright=0;
+		}
 		else 
 		{
-			noright=1;//no thing on right
+			bigturn('d');
+			if(++noright ==1)
+			{
+				while(!go());
+				noright=0;
+				my_delay(1000);
+				bigturn('a');
+			}
 			continue;
 		}
 		my_delay(1000);
@@ -363,9 +378,7 @@ int main()
 		my_delay(1000);
 		bigturn('a');
 		my_delay(1000);
-		noright=0;
 	}
-	*/
 
 	return 0;
 }
