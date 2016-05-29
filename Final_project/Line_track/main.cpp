@@ -33,15 +33,6 @@ void send_to_motor()
 #define lim_max(a) if(a> 255) a =  255;
 #define lim_min(a) if(a<-255) a = -255;
 #define abs(a) ((a)<0?-(a):(a))
-void change_motor(int l,int r)
-{
-	mot[0] += l;
-	mot[1] += r;
-	lim_min(mot[0]);
-	lim_max(mot[0]);
-	lim_min(mot[1]);
-	lim_max(mot[1]);
-}
 
 void set_motor(int l,int r)
 {
@@ -53,20 +44,10 @@ void set_motor(int l,int r)
 	lim_max(mot[1]);
 }
 
-void mult_motor(double mult)
+void stop()
 {
-	mot[0] *= mult;
-	mot[1] *= mult;
-}
-
-void slow_motor(int want)
-{
-	if ( abs( mot[0] - mot[1] ) < want*2)
-		mot[0]=mot[1]= (mot[0]+mot[1])/2;
-	else if( mot[0] > mot[1] )
-		mot[0]-=want,mot[1]+=want;
-	else 
-		mot[1]-=want,mot[0]+=want;
+	mot[0]=mot[1]=0;
+	send_to_motor();
 }
 
 void init_motor()
@@ -166,33 +147,6 @@ void toLevel(int *num)
 	}
 }
 
-int turndig = 1,allturn=0;
-char turndir;
-void LRturn(char c,int big=1)
-{
-	switch(c)
-	{
-		case 'a': 
-			if( turndir == 'd' )
-				big*=2;
-			change_motor(0, turndig*big);
-			turndir = c;
-			break;
-		case 'd': 
-			change_motor( turndig*big,0);
-			if( turndir == 'a' )
-				big*=2;
-			turndir = c;
-			break;
-		case 'w': 
-			change_motor( turndig*big, turndig*big);
-			break;
-		case 's': 
-			change_motor( -turndig*big, -turndig*big);
-			break;
-	}
-}
-
 
 int main()
 {
@@ -200,21 +154,37 @@ int main()
 	initserial();
 	my_delay(2000);
 
-	send_to_motor();
-	int num[3],sp=0,kp=70;
+	/*
+	while(1)
+	{
+		int num[3];
+		toLevel(num);
+		printserial(num);
+	}
+	*/
+
+	int num[3],sp=0,kp=80;
+	int t=0;
 	while(1)
 	{
 		toLevel(num);
-//		printserial(num);
+		if(num[0]+num[1]+num[2]==0)
+		{
+			if(++t==10)
+				break;
+		}
+		else
+			t=0;
 		int r=0;
 		for(int i=0;i<3;++i)
 			r += (i-1)*num[i];
 		int e = sp-r;
 		int v = kp*e;
-		set_motor(100-v,100+v);
+		set_motor(150-v,150+v);
 		send_to_motor();
 		my_delay(10);
 	}
+	stop();
 
 
 

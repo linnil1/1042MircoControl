@@ -33,15 +33,6 @@ void send_to_motor()
 #define lim_max(a) if(a> 255) a =  255;
 #define lim_min(a) if(a<-255) a = -255;
 #define abs(a) ((a)<0?-(a):(a))
-void change_motor(int l,int r)
-{
-	mot[0] += l;
-	mot[1] += r;
-	lim_min(mot[0]);
-	lim_max(mot[0]);
-	lim_min(mot[1]);
-	lim_max(mot[1]);
-}
 
 void set_motor(int l,int r)
 {
@@ -169,6 +160,7 @@ void bigturn(char c,int deg=2)
 	my_delay(130*deg);
 
 	stop();
+	my_delay(50);
 }
 
 /* NOTE
@@ -187,17 +179,24 @@ void blink()
 		}
 }
 
+bool go();
 
 void findnearest()
 {
 	//left
-	int dir=1;
+	int dir=1,t=0;
 	
 	int max = readDis();
 	while(1)
 	{
+		if(t++==9)
+		{
+			while(!go());
+			t=0;
+			continue;
+		}
 		PORTB = 0;
-		set_motor(65*dir,-65*dir);
+		set_motor(70*dir,-70*dir);
 		send_to_motor();
 		my_delay(300);
 		stop();
@@ -214,10 +213,9 @@ void findnearest()
 			break;
 		}
 	}
-	set_motor(60*dir,-60*dir);
+	set_motor(65*dir,-65*dir);
 	send_to_motor();
-	my_delay(300);
-
+	my_delay(450);
 	stop();
 /*
 	set_motor(-80,80);
@@ -269,13 +267,13 @@ void findwall()
 
 bool go_some()// true -> wall
 {
-	if ( getvol(3,50) > 700) return true;
-	set_motor(250,250);
+	if ( getvol(3,50) > 650) return true;
+	set_motor(245,250);
 	send_to_motor();
-	for(int i=0;i<30;++i)//1000
+	for(int i=0;i<40;++i)//1000
 	{
 		my_delay(10);
-		if ( getvol(3,50) > 700) return true;
+		if ( getvol(3,50) > 650) return true;
 	}
 	//slow down
 	for(int i=250;i>=0;i-=50)//300
@@ -284,7 +282,7 @@ bool go_some()// true -> wall
 		send_to_motor();
 		for(int j=0;j<5;++j)
 		{
-			if ( getvol(3,50) > 700) return true;
+			if ( getvol(3,50) > 650) return true;
 			my_delay(10);
 		}
 	}
@@ -317,8 +315,8 @@ int main()
 
 	while(1)
 	{
-//		findnearest();
-		findwall();
+		findnearest();
+//		findwall();
 		my_delay(2000);
 	}
 	*/
@@ -345,13 +343,15 @@ int main()
 */
 	
 	int isWall=0,noright=0;
+//	go();
+//	bigturn('d');
 	while(1)
 	{
 		isWall = go();
-		my_delay(1000);
+//		my_delay(1000);
 //		printserial(isWall);
 		bigturn('d');
-		my_delay(1000);
+//		my_delay(1000);
 		if( go() )
 		{
 			findwall();
@@ -364,20 +364,20 @@ int main()
 			{
 				while(!go());
 				noright=0;
-				my_delay(1000);
+//				my_delay(1000);
 				bigturn('a');
 			}
 			continue;
 		}
-		my_delay(1000);
+//		my_delay(1000);
 		bigturn('a');
 		if(isWall)// turn 180
 			bigturn('a');
-		my_delay(1000);
+//		my_delay(1000);
 		findnearest();
-		my_delay(1000);
+//		my_delay(1000);
 		bigturn('a');
-		my_delay(1000);
+//		my_delay(1000);
 	}
 
 	return 0;
