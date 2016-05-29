@@ -122,9 +122,7 @@ void my_delay(long t)//ms
 
 void initserial()
 {
-	CLKPR=(1<<CLKPCE);
-	CLKPR=0b00000000;//  to 8 Mhz
-    unsigned int BaudR = 9600;
+    unsigned int BaudR = 4800;
     unsigned int UbrrV = (F_CPU / (BaudR*16UL))-1;
     UBRR0H=(unsigned char)(UbrrV>>8);	// set Baud rate
     UBRR0L=(unsigned)UbrrV;
@@ -199,65 +197,26 @@ void LRturn(char c,int big=1)
 int main()
 {
 	init_motor();
-//	initserial();
-	my_delay(500);
-	DDRB  |= 1;
-	PORTB |= 1;
-	my_delay(500);
-	PORTB ^= 1;
+	initserial();
+	my_delay(2000);
 
-	set_motor(120,120);
 	send_to_motor();
-	unsigned long long int t = 0;
-	int num[3];
+	int num[3],sp=0,kp=70;
 	while(1)
 	{
-		++t;
 		toLevel(num);
-		if( num[0] && num[2])
-		{
-		}
-		else if( num[1]==2)
-		{
-			if( num[0])
-				LRturn('a',1);
-			else if( num[2])
-				LRturn('d',1);
-			else
-			{
-/*				if(turndir == 'a')
-					LRturn('d',1);
-				else if(turndir == 'd')
-					LRturn('a',1);
-*/
-				LRturn('w');
-//				slow_motor(15);
-			}
-		}
-		else if( num[1]==1)
-		{
-			if( num[0])
-				LRturn('a',2);
-			else if( num[2])
-				LRturn('d',2);
-		}
-		else
-		{ 
-			if( num[0] )
-				LRturn('a',3);
-			else if( num[2] )
-				LRturn('d',3);
-			else
-				set_motor(0,0);
-			if( mot[0]+mot[1] > 200)
-				mult_motor(0.8);
-		}
-
 //		printserial(num);
+		int r=0;
+		for(int i=0;i<3;++i)
+			r += (i-1)*num[i];
+		int e = sp-r;
+		int v = kp*e;
+		set_motor(100-v,100+v);
 		send_to_motor();
-		my_delay(1);
-		PORTB = 0;
+		my_delay(10);
 	}
+
+
 
 	return 0;
 }

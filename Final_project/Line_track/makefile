@@ -1,4 +1,4 @@
-MONITOR_PORT = /dev/ttyACM0
+#MONITOR_PORT = /dev/ttyACM0
 #USER_LIB_PATH = ../../../STDCPP
 
 BOARD_TAG    = uno
@@ -9,7 +9,9 @@ MCU = atmega328p
 AVRDUDE_ARD_BAUDRATE = 19200
 AVRDUDE_ARD_PROGRAMMER = stk500v1
 #HEX_MAXIMUM_SIZE = 32768
-AVRDUDE_OPTS = -v
+AVRDUDE_OPTS = -V
+
+MONITOR_BAUDRATE = 4800
 
 include ../../../Arduino-Makefile/Arduino.mk
 
