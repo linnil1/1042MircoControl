@@ -141,19 +141,31 @@ unsigned int readDis()
 }
 
 
+void gostraight()
+{
+	set_motor(150,150);
+	send_to_motor();
+	while(getvol(3,50)<600);
+	stop();
+}
+
 void go()
 {
 	set_motor(250,100);
 	send_to_motor();
-	while(getvol(3,50) < 650);
+	int t=0;
+	while(getvol(3,50) < 650 && ++t < 1000);
+	if(t>=1000)
+		gostraight();
 	stop();
-	if(readDis()>700)
+	if(readDis()>850)
 	{
 		set_motor(-150,-150);
 		send_to_motor();
 		my_delay(80);
 
 	}
+	stop();
 }
 
 void blink(int ms)
@@ -182,17 +194,14 @@ int where()
 	turn(100,-1);
 	int next = readDis();
 	if( now < 600 && next < 600)// go straight
-	{
-		set_motor(150,150);
-		send_to_motor();
-		while(getvol(3,50)<600);
-	}
-	else if( abs(now-next) < 5)
-		turn(450);
+		gostraight();
+	else if( abs(now-next) < 15)
+		turn(425);
 	else if( now < next)
-		turn(400);
+		turn(350);
 	else // now > next
-		turn(500);
+		turn(450);
+	stop();
 }
 
 
@@ -201,6 +210,7 @@ int main()
 	init_motor();
 	initserial();
 	DDRB|=2;
+	my_delay(2000);
 	while(1)
 	{
 		go();
