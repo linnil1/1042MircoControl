@@ -5,8 +5,8 @@ unsigned long timeold;
 
 const int l0=5;
 const int l1=6;
-const int r0=10;
-const int r1=11;
+const int r0=9;
+const int r1=10;
 
 void countl() { half_revolutionsl++; }
 void countr() { half_revolutionsr++; }
@@ -24,8 +24,6 @@ void setup()
 	pinMode(r1,OUTPUT);
 	speedl = speedr = 100;
 	timeold = millis();
-
-	speedl = speedr = 100;
 }
 
 void update_rpm()
