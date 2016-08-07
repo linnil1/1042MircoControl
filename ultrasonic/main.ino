@@ -6,6 +6,7 @@ enum {
 }; 
 
 bool before=0;
+long beforedis1,beforedis2;
 void setup()
 {
 	Serial.begin(38400);
@@ -14,6 +15,7 @@ void setup()
 	pinMode(ECHO_PIN2,  INPUT);
 	pinMode(TRIG_PIN2, OUTPUT);
 	before = 0;
+	beforedis1=beforedis2=100;
 }
 
 long trigerSend(int trig,int echo)
@@ -49,47 +51,51 @@ int observe()
 	long  dis1 = trigerSend(TRIG_PIN1,ECHO_PIN1),
 	      dis2 = trigerSend(TRIG_PIN2,ECHO_PIN2);
 	
-	
 	if( (dis1 < 20 || dis2 < 20) && !before)
 	{
 		Serial.println("stop");
 		//motor stop
 		delay(1000);
 
-		bool isslow=0;
 		for(int i=0;i<50;++i)
 		{
 			long  disA = trigerSend(TRIG_PIN1,ECHO_PIN1),
 				  disB = trigerSend(TRIG_PIN2,ECHO_PIN2);
 
-			if ( abs(disA-dis1) > 3 || abs(disB-dis2) > 3)
+			if ( (dis1<20 && abs(disA-dis1) > 3) || 
+			     (dis2<20 && abs(disB-dis2) > 3)   )
 			{
 				Serial.println("slow");
+//				delay(1000);//for debug use
 				//motor slow
-				return 1;
 				before = 1;
-				isslow = 1;
-				break;
+				beforedis1 = dis1;
+				beforedis2 = dis2;
+				return 1;
 			}
 			delay(10);
 		}
-		if (!isslow)
-		{
-			Serial.println("Ignore");
-			//motor go
-			return 2;
-			before = 1;
-		}
+		Serial.println("Ignore");
 //		delay(1000);//for debug use
+		//motor go
+		beforedis1 = dis1;
+		beforedis2 = dis2;
+		before = 1;
+		return 2;
 	}
-	else if ( (dis1 < 20 || dis2 < 20) && before)
+	else if ( (dis1<20?beforedis1<20:1) && 
+	          (dis2<20?beforedis2<20:1) && before)
 	{
 		Serial.println("Continue");
+		beforedis1 = dis1;
+		beforedis2 = dis2;
 		return 0;
 	}
 	else
 	{
 		before=0;
+		beforedis1 = dis1;
+		beforedis2 = dis2;
 		Serial.println("Normal");
 		return 0;
 		//motor go
@@ -104,5 +110,5 @@ int observe()
 
 void loop()
 {
-	code = observe();
+	int code = observe();
 }
